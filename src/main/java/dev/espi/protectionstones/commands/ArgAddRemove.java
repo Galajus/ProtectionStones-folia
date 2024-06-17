@@ -88,7 +88,7 @@ public class ArgAddRemove implements PSCommandArg {
         String addPlayerName = UUIDCache.getNameFromUUID(addPlayerUuid);
 
         // getting player regions is slow, so run it async
-        Bukkit.getServer().getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             List<PSRegion> regions;
 
             // obtain region list that player is being added to or removed from
@@ -160,7 +160,7 @@ public class ArgAddRemove implements PSCommandArg {
                     }
 
                     // add to WorldGuard profile cache
-                    Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> UUIDCache.storeWGProfile(addPlayerUuid, addPlayerName));
+                    Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task2) -> UUIDCache.storeWGProfile(addPlayerUuid, addPlayerName));
 
                 } else if ((operationType.equals("remove") && r.isMember(addPlayerUuid))
                         || (operationType.equals("removeowner") && r.isOwner(addPlayerUuid))) {

@@ -15,7 +15,10 @@
 
 package dev.espi.protectionstones.commands;
 
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSPlayer;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.MiscUtil;
 import dev.espi.protectionstones.utils.TextGUI;
 import dev.espi.protectionstones.utils.UUIDCache;
@@ -31,7 +34,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public class ArgTax implements PSCommandArg {
 
@@ -104,7 +111,7 @@ public class ArgTax implements PSCommandArg {
 
     public boolean taxInfo(String[] args, HashMap<String, String> flags, PSPlayer p) {
         if (args.length == 2) { // /ps tax info
-            Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                 int pageNum = (flags.get("-p") == null || !MiscUtil.isValidInteger(flags.get("-p")) ? 0 : Integer.parseInt(flags.get("-p"))-1);
 
                 List<TextComponent> entries = new ArrayList<>();

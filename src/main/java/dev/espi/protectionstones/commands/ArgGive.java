@@ -15,8 +15,8 @@
 
 package dev.espi.protectionstones.commands;
 
-import dev.espi.protectionstones.PSProtectBlock;
 import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSProtectBlock;
 import dev.espi.protectionstones.ProtectionStones;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
@@ -25,7 +25,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public class ArgGive implements PSCommandArg {
 
@@ -70,7 +73,7 @@ public class ArgGive implements PSCommandArg {
         Player ps = Bukkit.getPlayer(args[2]);
 
         ItemStack item = cp.createItem();
-        if (args.length >= 4 && NumberUtils.isNumber(args[3]))
+        if (args.length >= 4 && NumberUtils.isCreatable(args[3]))
             item.setAmount(Integer.parseInt(args[3]));
 
         if (!ps.getInventory().addItem(item).isEmpty()) {

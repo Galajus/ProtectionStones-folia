@@ -17,16 +17,18 @@ package dev.espi.protectionstones.utils;
 
 import dev.espi.protectionstones.ProtectionStones;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
 public class ParticlesUtil {
     public static void persistRedstoneParticle(Player p, Location l, Particle.DustOptions d, int occ) {
-        for (int i = 0; i < occ; i++) {
-            Bukkit.getScheduler().runTaskLater(ProtectionStones.getInstance(), () -> {
-                if (p.isOnline()) p.spawnParticle(Particle.DUST, l, 1, d);
-            }, i*20);
+        for (int i = 1; i < occ +1; i++) {
+            Bukkit.getGlobalRegionScheduler().runDelayed(ProtectionStones.getInstance(), (task) -> {
+
+                if (p.isOnline()) p.spawnParticle(Particle.DUST.builder().color(Color.RED).particle(), l, 1, d);
+            }, i*20L);
         }
     }
 }

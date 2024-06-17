@@ -34,7 +34,7 @@ class ArgAdminSetTaxAutopayers {
 
         PSL.msg(s, ChatColor.GRAY + "Scanning through regions, and setting tax autopayers for regions that don't have one...");
 
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             WGUtils.getAllRegionManagers().forEach((w, rgm) -> {
                 for (ProtectedRegion r : rgm.getRegions().values()) {
                     PSRegion psr = PSRegion.fromWGRegion(w, r);

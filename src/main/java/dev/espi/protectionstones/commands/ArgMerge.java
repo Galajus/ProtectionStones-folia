@@ -19,7 +19,9 @@ import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.WGMerge;
 import dev.espi.protectionstones.utils.WGUtils;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -31,7 +33,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ArgMerge implements PSCommandArg {
@@ -129,7 +133,7 @@ public class ArgMerge implements PSCommandArg {
             if (!WGUtils.canMergeRegionTypes(aRegion.getTypeOptions(), aRoot))
                 return PSL.msg(p, PSL.MERGE_NOT_ALLOWED.msg());
 
-            Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                 try {
                     WGMerge.mergeRealRegions(p.getWorld(), rm, aRoot, Arrays.asList(aRegion, aRoot));
                 } catch (WGMerge.RegionHoleException e) {
@@ -142,7 +146,7 @@ public class ArgMerge implements PSCommandArg {
                 PSL.msg(p, PSL.MERGE_MERGED.msg());
 
                 // show menu again if the new region still has overlapping regions
-                Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> {
+                Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task1) -> {
                     if (!getGUI(p, PSRegion.fromWGRegion(p.getWorld(), rm.getRegion(aRoot.getId()))).isEmpty()) {
                         Bukkit.dispatchCommand(p, ProtectionStones.getInstance().getConfigOptions().base_command + " merge");
                     }

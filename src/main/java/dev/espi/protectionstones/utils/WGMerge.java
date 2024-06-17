@@ -20,11 +20,21 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.RemovalStrategy;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.FlagHandler;
+import dev.espi.protectionstones.PSGroupRegion;
+import dev.espi.protectionstones.PSMergedRegion;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class WGMerge {
 
@@ -262,7 +272,7 @@ public class WGMerge {
         for (PSRegion r : merge) {
             if (!r.getId().equals(newID)) {
                 // run delete event for non-root real regions
-                Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> r.deleteRegion(false));
+                Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> r.deleteRegion(false));
             } else {
                 rm.removeRegion(r.getId());
             }
