@@ -21,7 +21,7 @@ import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.LimitUtil;
 import dev.espi.protectionstones.utils.UUIDCache;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -115,7 +115,7 @@ public class ArgBuySell implements PSCommandArg {
                 r.setSellable(false, null, 0);
                 PSL.msg(p, PSL.BUY_STOP_SELL.msg());
             } else {
-                if (!NumberUtils.isNumber(args[1]))
+                if (!NumberUtils.isCreatable(args[1]))
                     return PSL.msg(p, PSL.SELL_HELP.msg());
 
                 PSL.msg(p, PSL.SELL_FOR_SALE.msg().replace("%price%", String.format("%.2f", Double.parseDouble(args[1]))));

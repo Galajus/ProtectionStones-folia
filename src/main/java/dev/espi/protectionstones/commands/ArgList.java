@@ -27,7 +27,12 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ArgList implements PSCommandArg {
@@ -65,7 +70,7 @@ public class ArgList implements PSCommandArg {
         PSPlayer psp = PSPlayer.fromPlayer((Player) s);
 
         // run query async to reduce load
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             if (args.length == 1) {
                 List<PSRegion> regions = psp.getPSRegionsCrossWorld(psp.getPlayer().getWorld(), true);
                 display(s, regions, psp.getUuid(), true);
