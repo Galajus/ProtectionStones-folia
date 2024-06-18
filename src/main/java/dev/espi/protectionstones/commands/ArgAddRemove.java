@@ -22,11 +22,14 @@ import dev.espi.protectionstones.PSPlayer;
 import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.LimitUtil;
+import dev.espi.protectionstones.utils.PermUtil;
 import dev.espi.protectionstones.utils.UUIDCache;
 import dev.espi.protectionstones.utils.WGUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -35,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -115,7 +119,6 @@ public class ArgAddRemove implements PSCommandArg {
                     PSL.msg(p, PSL.CANNOT_REMOVE_YOURSELF_LAST_OWNER.msg());
                     return;
                 }
-
                 regions = Collections.singletonList(r);
             }
 
@@ -129,11 +132,28 @@ public class ArgAddRemove implements PSCommandArg {
             // apply operation to regions
             for (PSRegion r : regions) {
 
+                String regionName = r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")";
                 if (operationType.equals("add") || operationType.equals("addowner")) {
+                    int membersLimit = PermUtil.getLimitOwnersFromPermission(p, "protectionstones.members-amount.");
+                    int ownersLimit = PermUtil.getLimitOwnersFromPermission(p, "protectionstones.owners-amount.");
+                    p.sendMessage("MEMBER LIMIT: " + membersLimit + " | OWNER LIMIT: " + ownersLimit + " | REGION MEMBERS: " + r.getMembers().size());
+                    if (operationType.equals("add") && r.getMembers().size() >= membersLimit) {
+                        PSL.msg(p, PSL.MEMBERS_LIMIT.msg()
+                                .replace("%limit%", String.valueOf(membersLimit))
+                                .replace("%region%", regionName));
+                        continue;
+                    }
+                    if (operationType.equals("addowner") && r.getOwners().size() >= ownersLimit) {
+                        PSL.msg(p, PSL.OWNERS_LIMIT.msg()
+                                .replace("%limit%", String.valueOf(membersLimit))
+                                .replace("%region%", regionName));
+                        continue;
+                    }
+
                     if (flags.containsKey("-a")) {
                         PSL.msg(p, PSL.ADDED_TO_REGION_SPECIFIC.msg()
                                 .replace("%player%", addPlayerName)
-                                .replace("%region%", r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")"));
+                                .replace("%region%", regionName));
                     } else {
 
                         PSL.msg(p, PSL.ADDED_TO_REGION.msg().replace("%player%", addPlayerName));
@@ -148,7 +168,7 @@ public class ArgAddRemove implements PSCommandArg {
                     if (flags.containsKey("-a")) {
                         PSL.msg(p, PSL.REMOVED_FROM_REGION_SPECIFIC.msg()
                                 .replace("%player%", addPlayerName)
-                                .replace("%region%", r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")"));
+                                .replace("%region%", regionName));
                     } else {
                         PSL.msg(p, PSL.REMOVED_FROM_REGION.msg().replace("%player%", addPlayerName));
                     }
