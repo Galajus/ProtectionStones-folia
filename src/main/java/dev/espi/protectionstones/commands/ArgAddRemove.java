@@ -115,7 +115,6 @@ public class ArgAddRemove implements PSCommandArg {
                     PSL.msg(p, PSL.CANNOT_REMOVE_YOURSELF_LAST_OWNER.msg());
                     return;
                 }
-
                 regions = Collections.singletonList(r);
             }
 
