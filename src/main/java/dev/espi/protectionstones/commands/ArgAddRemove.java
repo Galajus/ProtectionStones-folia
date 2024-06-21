@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -134,9 +133,12 @@ public class ArgAddRemove implements PSCommandArg {
 
                 String regionName = r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")";
                 if (operationType.equals("add") || operationType.equals("addowner")) {
-                    int membersLimit = PermUtil.getLimitOwnersFromPermission(p, "protectionstones.members-amount.");
-                    int ownersLimit = PermUtil.getLimitOwnersFromPermission(p, "protectionstones.owners-amount.");
-                    p.sendMessage("MEMBER LIMIT: " + membersLimit + " | OWNER LIMIT: " + ownersLimit + " | REGION MEMBERS: " + r.getMembers().size());
+
+                    // check limit members and owners for a region -> atm if more than one owner
+                    // then, if a second owner has perm with more members/owners, he can add them - possible abuse?
+                    int membersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.members-limit.", 2, 0);
+                    int ownersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.owners-limit.", 2, 1);
+                  
                     if (operationType.equals("add") && r.getMembers().size() >= membersLimit) {
                         PSL.msg(p, PSL.MEMBERS_LIMIT.msg()
                                 .replace("%limit%", String.valueOf(membersLimit))
@@ -145,7 +147,8 @@ public class ArgAddRemove implements PSCommandArg {
                     }
                     if (operationType.equals("addowner") && r.getOwners().size() >= ownersLimit) {
                         PSL.msg(p, PSL.OWNERS_LIMIT.msg()
-                                .replace("%limit%", String.valueOf(membersLimit))
+
+                                .replace("%limit%", String.valueOf(ownersLimit))
                                 .replace("%region%", regionName));
                         continue;
                     }
