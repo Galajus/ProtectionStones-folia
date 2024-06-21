@@ -16,15 +16,29 @@
 package dev.espi.protectionstones.commands;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSGroupRegion;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSMergedRegion;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.ParticlesUtil;
 import dev.espi.protectionstones.utils.RegionTraverse;
 import dev.espi.protectionstones.utils.WGUtils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ArgView implements PSCommandArg {
@@ -78,13 +92,13 @@ public class ArgView implements PSCommandArg {
 
         // add player to cooldown
         cooldown.add(p.getUniqueId());
-        Bukkit.getScheduler().runTaskLaterAsynchronously(ProtectionStones.getInstance(), () -> cooldown.remove(p.getUniqueId()), 20 * ProtectionStones.getInstance().getConfigOptions().psViewCooldown);
+        Bukkit.getAsyncScheduler().runDelayed(ProtectionStones.getInstance(), (task) -> cooldown.remove(p.getUniqueId()), (20L * ProtectionStones.getInstance().getConfigOptions().psViewCooldown) * 50, TimeUnit.MILLISECONDS);
 
-        int playerY = p.getLocation().getBlockY(), minY = r.getWGRegion().getMinimumPoint().getBlockY(), maxY = r.getWGRegion().getMaximumPoint().getBlockY();
+        int playerY = p.getLocation().getBlockY(), minY = r.getWGRegion().getMinimumPoint().y(), maxY = r.getWGRegion().getMaximumPoint().y();
 
         // send particles to client
 
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
 
             AtomicInteger modU = new AtomicInteger(0);
 
@@ -105,15 +119,15 @@ public class ArgView implements PSCommandArg {
 
             RegionTraverse.traverseRegionEdge(new HashSet<>(r.getWGRegion().getPoints()), Collections.singletonList(r.getWGRegion()), tr -> {
                 if (tr.isVertex) {
-                    handleBlueParticle(p, new Location(p.getWorld(), 0.5+tr.point.getX(), 0.5+playerY, 0.5+tr.point.getZ()));
+                    handleBlueParticle(p, new Location(p.getWorld(), 0.5+tr.point.x(), 0.5+playerY, 0.5+tr.point.z()));
                     for (int y = minY; y <= maxY; y += 5) {
-                        handleBlueParticle(p, new Location(p.getWorld(), 0.5+tr.point.getX(), 0.5+y, 0.5+tr.point.getZ()));
+                        handleBlueParticle(p, new Location(p.getWorld(), 0.5+tr.point.x(), 0.5+y, 0.5+tr.point.z()));
                     }
                 } else {
                     if (modU.get() % 2 == 0) {
-                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.getX(), 0.5+playerY, 0.5+tr.point.getZ()));
-                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.getX(), 0.5+minY, 0.5+tr.point.getZ()));
-                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.getX(), 0.5+maxY, 0.5+tr.point.getZ()));
+                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.x(), 0.5+playerY, 0.5+tr.point.z()));
+                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.x(), 0.5+minY, 0.5+tr.point.z()));
+                        handlePinkParticle(p, new Location(p.getWorld(), 0.5+tr.point.x(), 0.5+maxY, 0.5+tr.point.z()));
                     }
                     modU.set((modU.get() + 1) % 2);
                 }

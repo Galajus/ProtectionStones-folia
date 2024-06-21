@@ -21,7 +21,10 @@ import dev.espi.protectionstones.PSL;
 import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.WGUtils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -30,7 +33,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 class ArgAdminCleanup {
 
@@ -91,7 +100,7 @@ class ArgAdminCleanup {
 
         // async cleanup task
         String finalAlias = alias;
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             int days = (args.size() > 0) ? Integer.parseInt(args.get(0)) : 30; // 30 days is default if days aren't specified
 
             PSL.msg(p, PSL.ADMIN_CLEANUP_HEADER.msg()
@@ -146,7 +155,7 @@ class ArgAdminCleanup {
 
     static private void regionLoop(Iterator<PSRegion> deleteRegionsIterator, CommandSender p, boolean isRemoveOperation) {
         if (deleteRegionsIterator.hasNext()) {
-            Bukkit.getScheduler().runTaskLater(ProtectionStones.getInstance(), () ->
+            Bukkit.getGlobalRegionScheduler().runDelayed(ProtectionStones.getInstance(), (task) ->
                     processRegion(deleteRegionsIterator, p, isRemoveOperation), 1);
         } else { // finished region iteration
             PSL.msg(p, PSL.ADMIN_CLEANUP_FOOTER.msg()

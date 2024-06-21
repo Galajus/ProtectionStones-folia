@@ -32,7 +32,11 @@ import dev.espi.protectionstones.utils.WGMerge;
 import dev.espi.protectionstones.utils.WGUtils;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -275,7 +279,7 @@ public class BlockHandler {
         if (blockOptions.autoHide) {
             PSL.msg(p, PSL.REGION_HIDDEN.msg());
             // run on next tick so placing tile entities don't complain
-            Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> l.getBlock().setType(Material.AIR));
+            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> l.getBlock().setType(Material.AIR));
         }
 
         if (blockOptions.startWithTaxAutopay) {
@@ -312,7 +316,8 @@ public class BlockHandler {
             // actually do auto merge
             if (!showGUI) {
                 PSRegion finalMergeTo = mergeTo;
-                Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+
+                Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                     try {
                         WGMerge.mergeRealRegions(p.getWorld(), r.getWGRegionManager(), finalMergeTo, Arrays.asList(finalMergeTo, r));
                         PSL.msg(p, PSL.MERGE_AUTO_MERGED.msg().replace("%region%", finalMergeTo.getId()));

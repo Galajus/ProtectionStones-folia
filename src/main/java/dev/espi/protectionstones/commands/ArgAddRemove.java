@@ -22,11 +22,14 @@ import dev.espi.protectionstones.PSPlayer;
 import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.LimitUtil;
+import dev.espi.protectionstones.utils.PermUtil;
 import dev.espi.protectionstones.utils.UUIDCache;
 import dev.espi.protectionstones.utils.WGUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -88,7 +91,7 @@ public class ArgAddRemove implements PSCommandArg {
         String addPlayerName = UUIDCache.getNameFromUUID(addPlayerUuid);
 
         // getting player regions is slow, so run it async
-        Bukkit.getServer().getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             List<PSRegion> regions;
 
             // obtain region list that player is being added to or removed from
@@ -115,7 +118,6 @@ public class ArgAddRemove implements PSCommandArg {
                     PSL.msg(p, PSL.CANNOT_REMOVE_YOURSELF_LAST_OWNER.msg());
                     return;
                 }
-
                 regions = Collections.singletonList(r);
             }
 
@@ -136,7 +138,7 @@ public class ArgAddRemove implements PSCommandArg {
                     // then, if a second owner has perm with more members/owners, he can add them - possible abuse?
                     int membersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.members-limit.", 2, 0);
                     int ownersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.owners-limit.", 2, 1);
-
+                  
                     if (operationType.equals("add") && r.getMembers().size() >= membersLimit) {
                         PSL.msg(p, PSL.MEMBERS_LIMIT.msg()
                                 .replace("%limit%", String.valueOf(membersLimit))
@@ -145,6 +147,7 @@ public class ArgAddRemove implements PSCommandArg {
                     }
                     if (operationType.equals("addowner") && r.getOwners().size() >= ownersLimit) {
                         PSL.msg(p, PSL.OWNERS_LIMIT.msg()
+
                                 .replace("%limit%", String.valueOf(ownersLimit))
                                 .replace("%region%", regionName));
                         continue;
@@ -160,7 +163,7 @@ public class ArgAddRemove implements PSCommandArg {
                     }
 
                     // add to WorldGuard profile cache
-                    Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> UUIDCache.storeWGProfile(addPlayerUuid, addPlayerName));
+                    Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task2) -> UUIDCache.storeWGProfile(addPlayerUuid, addPlayerName));
 
                 } else if ((operationType.equals("remove") && r.isMember(addPlayerUuid))
                         || (operationType.equals("removeowner") && r.isOwner(addPlayerUuid))) {

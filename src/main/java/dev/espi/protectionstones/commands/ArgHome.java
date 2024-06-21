@@ -15,7 +15,10 @@
 
 package dev.espi.protectionstones.commands;
 
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSPlayer;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.ChatUtil;
 import dev.espi.protectionstones.utils.MiscUtil;
 import dev.espi.protectionstones.utils.TextGUI;
@@ -23,14 +26,19 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ArgHome implements PSCommandArg {
@@ -81,9 +89,9 @@ public class ArgHome implements PSCommandArg {
                 // cache home regions
                 tabCache.put(p.getUniqueId(), regionNames);
 
-                Bukkit.getScheduler().runTaskLater(ProtectionStones.getInstance(), () -> {
+                Bukkit.getAsyncScheduler().runDelayed(ProtectionStones.getInstance(), (task) -> {
                     tabCache.remove(p.getUniqueId());
-                }, 200); // remove cache after 10 seconds
+                }, 200 * 50, TimeUnit.MILLISECONDS); // remove cache after 10 seconds
             }
 
             return StringUtil.copyPartialMatches(args[1], tabCache.get(p.getUniqueId()), new ArrayList<>());
@@ -129,7 +137,7 @@ public class ArgHome implements PSCommandArg {
         if (args.length != 2 && args.length != 1)
             return PSL.msg(p, PSL.HOME_HELP.msg());
 
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
             PSPlayer psp = PSPlayer.fromPlayer(p);
             if (args.length == 1) {
                 // just "/ps home"

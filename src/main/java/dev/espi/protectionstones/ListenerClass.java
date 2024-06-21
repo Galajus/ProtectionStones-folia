@@ -17,15 +17,12 @@ package dev.espi.protectionstones;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.bukkit.event.block.PlaceBlockEvent;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
 import dev.espi.protectionstones.event.PSCreateEvent;
 import dev.espi.protectionstones.event.PSRemoveEvent;
 import dev.espi.protectionstones.utils.RecipeUtil;
@@ -41,22 +38,37 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Furnace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockPistonEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.inventory.FurnaceBurnEvent;
+import org.bukkit.event.inventory.FurnaceSmeltEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -73,7 +85,7 @@ public class ListenerClass implements Listener {
         UUIDCache.storeUUIDNamePair(p.getUniqueId(), p.getName());
 
         // allow worldguard to resolve all UUIDs to names
-        Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> UUIDCache.storeWGProfile(p.getUniqueId(), p.getName()));
+        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> UUIDCache.storeWGProfile(p.getUniqueId(), p.getName()));
 
         // add recipes to player's recipe book
         p.discoverRecipes(RecipeUtil.getRecipeKeys());
@@ -87,7 +99,7 @@ public class ListenerClass implements Listener {
 
         // tax join message
         if (ProtectionStones.getInstance().getConfigOptions().taxEnabled && ProtectionStones.getInstance().getConfigOptions().taxMessageOnJoin) {
-            Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                 int amount = 0;
                 for (PSRegion psr : psp.getTaxEligibleRegions()) {
                     for (PSRegion.TaxPayment tp : psr.getTaxPaymentsDue()) {
@@ -562,7 +574,7 @@ public class ListenerClass implements Listener {
         if (!event.getRegion().getTypeOptions().eventsEnabled) return;
 
         // run on next tick (after the region is created to allow for edits to the region)
-        Bukkit.getServer().getScheduler().runTask(ProtectionStones.getInstance(), () -> {
+        Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> {
             // run custom commands (in config)
             for (String action : event.getRegion().getTypeOptions().regionCreateCommands) {
                 execEvent(action, event.getPlayer(), event.getPlayer().getName(), event.getRegion());

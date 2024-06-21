@@ -15,22 +15,29 @@
 
 package dev.espi.protectionstones.commands;
 
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSPlayer;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.ChatUtil;
 import dev.espi.protectionstones.utils.UUIDCache;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class ArgTp implements PSCommandArg {
 
     private static HashMap<UUID, Integer> waitCounter = new HashMap<>();
-    private static HashMap<UUID, BukkitTask> taskCounter = new HashMap<>();
+    private static HashMap<UUID, ScheduledTask> taskCounter = new HashMap<>();
 
     // /ps tp, /ps home
 
@@ -66,7 +73,7 @@ public class ArgTp implements PSCommandArg {
             return PSL.msg(p, PSL.TP_HELP.msg());
 
         if (args.length == 2) { // /ps tp [name/id]
-            Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                 // get regions from the query
                 List<PSRegion> regions = ProtectionStones.getPSRegions(p.getWorld(), args[1]);
 
@@ -100,7 +107,7 @@ public class ArgTp implements PSCommandArg {
             UUID tpUuid = UUIDCache.getUUIDFromName(tpName);
 
             // run region search asynchronously to avoid blocking server thread
-            Bukkit.getScheduler().runTaskAsynchronously(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
                 List<PSRegion> regions = PSPlayer.fromUUID(tpUuid).getPSRegionsCrossWorld(p.getWorld(), false);
 
                 // check if region was found
@@ -138,15 +145,15 @@ public class ArgTp implements PSCommandArg {
         if (r.getTypeOptions().tpWaitingSeconds == 0 || p.hasPermission("protectionstones.tp.bypasswait")) {
             // no teleport delay
             PSL.msg(p, PSL.TPING.msg());
-            Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> p.teleport(r.getHome())); // run on main thread, not async
+            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> p.teleport(r.getHome())); // run on main thread, not async
         } else if (!r.getTypeOptions().noMovingWhenTeleportWaiting) {
             // teleport delay, but doesn't care about moving
             p.sendMessage(PSL.TP_IN_SECONDS.msg().replace("%seconds%", "" + r.getTypeOptions().tpWaitingSeconds));
 
-            Bukkit.getScheduler().runTaskLater(ProtectionStones.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runDelayed(ProtectionStones.getInstance(), (task) -> {
                 PSL.msg(p, PSL.TPING.msg());
                 p.teleport(r.getHome());
-            }, 20 * r.getTypeOptions().tpWaitingSeconds);
+            }, 20L * r.getTypeOptions().tpWaitingSeconds * 50, TimeUnit.MILLISECONDS);
 
         } else {// delay and not allowed to move
             PSL.msg(p, PSL.TP_IN_SECONDS.msg().replace("%seconds%", "" + r.getTypeOptions().tpWaitingSeconds));
@@ -158,7 +165,7 @@ public class ArgTp implements PSCommandArg {
 
             // add teleport wait tasks to queue
             waitCounter.put(uuid, 0);
-            taskCounter.put(uuid, Bukkit.getScheduler().runTaskTimer(ProtectionStones.getInstance(), () -> {
+            taskCounter.put(uuid, Bukkit.getGlobalRegionScheduler().runAtFixedRate(ProtectionStones.getInstance(), (task) -> {
                         Player pl = Bukkit.getPlayer(uuid);
                         // cancel if the player is not on the server
                         if (pl == null) {

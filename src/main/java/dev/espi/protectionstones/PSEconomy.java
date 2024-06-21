@@ -20,6 +20,7 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import dev.espi.protectionstones.utils.MiscUtil;
 import dev.espi.protectionstones.utils.WGUtils;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -38,7 +40,8 @@ import java.util.stream.Collectors;
 
 public class PSEconomy {
     private List<PSRegion> rentedList = new CopyOnWriteArrayList<>();
-    private static int rentRunner = -1, taxRunner = -1;
+    private static ScheduledTask RENT_RUNNER = null;
+    private static ScheduledTask TAX_RUNNER = null;
 
     public PSEconomy() {
         if (!ProtectionStones.getInstance().isVaultSupportEnabled()) {
@@ -49,11 +52,11 @@ public class PSEconomy {
         loadRentList();
 
         // start rent
-        rentRunner = Bukkit.getScheduler().runTaskTimerAsynchronously(ProtectionStones.getInstance(), this::updateRents, 0, 200).getTaskId();
+        RENT_RUNNER = Bukkit.getAsyncScheduler().runAtFixedRate(ProtectionStones.getInstance(), (task) -> this.updateRents(), 0, 200* 50, TimeUnit.MILLISECONDS);
 
         // start taxes
         if (ProtectionStones.getInstance().getConfigOptions().taxEnabled)
-            taxRunner = Bukkit.getScheduler().runTaskTimerAsynchronously(ProtectionStones.getInstance(), this::updateTaxes, 0, 200).getTaskId();
+            TAX_RUNNER = Bukkit.getAsyncScheduler().runAtFixedRate(ProtectionStones.getInstance(), (task) -> this.updateTaxes(), 0, 200 * 50, TimeUnit.MILLISECONDS);
     }
 
     private synchronized void updateRents() {
@@ -89,13 +92,13 @@ public class PSEconomy {
      * Stops the economy cycle. Used for reloads when creating a new PSEconomy.
      */
     public void stop() {
-        if (rentRunner != -1) {
-            Bukkit.getScheduler().cancelTask(rentRunner);
-            rentRunner = -1;
+        if (RENT_RUNNER != null) {
+            RENT_RUNNER.cancel();
+            RENT_RUNNER = null;
         }
-        if (taxRunner != -1) {
-            Bukkit.getScheduler().cancelTask(taxRunner);
-            taxRunner = -1;
+        if (TAX_RUNNER != null) {
+            TAX_RUNNER.cancel();
+            TAX_RUNNER = null;
         }
     }
 
@@ -126,7 +129,7 @@ public class PSEconomy {
     public static void processTaxes(PSRegion r) {
         // if taxes are enabled for this regions
         if (r.getTypeOptions() != null && r.getTypeOptions().taxPeriod != -1) {
-            Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> {
+            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> {
                 // update tax payments due
                 r.updateTaxPayments();
 
@@ -191,7 +194,7 @@ public class PSEconomy {
         }
 
         // update money must be run in main thread
-        Bukkit.getScheduler().runTask(ProtectionStones.getInstance(), () -> tenant.pay(landlord, r.getPrice()));
+        Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> tenant.pay(landlord, r.getPrice()));
         r.setRentLastPaid(Instant.now().getEpochSecond());
         try { // must save region to persist last paid
             r.getWGRegionManager().saveChanges();
