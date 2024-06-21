@@ -16,7 +16,11 @@
 package dev.espi.protectionstones.commands;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import dev.espi.protectionstones.*;
+import dev.espi.protectionstones.PSGroupRegion;
+import dev.espi.protectionstones.PSL;
+import dev.espi.protectionstones.PSPlayer;
+import dev.espi.protectionstones.PSRegion;
+import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.LimitUtil;
 import dev.espi.protectionstones.utils.UUIDCache;
 import dev.espi.protectionstones.utils.WGUtils;
@@ -25,7 +29,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -119,12 +129,33 @@ public class ArgAddRemove implements PSCommandArg {
             // apply operation to regions
             for (PSRegion r : regions) {
 
+                String regionName = r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")";
                 if (operationType.equals("add") || operationType.equals("addowner")) {
+
+                    // check limit members and owners for a region -> atm if more than one owner
+                    // then, if a second owner has perm with more members/owners, he can add them - possible abuse?
+                    int membersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.members-limit.", 2, 0);
+                    int ownersLimit = LimitUtil.getPermissionIntVariable(p, "protectionstones.owners-limit.", 2, 1);
+
+                    if (operationType.equals("add") && r.getMembers().size() >= membersLimit) {
+                        PSL.msg(p, PSL.MEMBERS_LIMIT.msg()
+                                .replace("%limit%", String.valueOf(membersLimit))
+                                .replace("%region%", regionName));
+                        continue;
+                    }
+                    if (operationType.equals("addowner") && r.getOwners().size() >= ownersLimit) {
+                        PSL.msg(p, PSL.OWNERS_LIMIT.msg()
+                                .replace("%limit%", String.valueOf(ownersLimit))
+                                .replace("%region%", regionName));
+                        continue;
+                    }
+
                     if (flags.containsKey("-a")) {
                         PSL.msg(p, PSL.ADDED_TO_REGION_SPECIFIC.msg()
                                 .replace("%player%", addPlayerName)
-                                .replace("%region%", r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")"));
+                                .replace("%region%", regionName));
                     } else {
+
                         PSL.msg(p, PSL.ADDED_TO_REGION.msg().replace("%player%", addPlayerName));
                     }
 
@@ -137,7 +168,7 @@ public class ArgAddRemove implements PSCommandArg {
                     if (flags.containsKey("-a")) {
                         PSL.msg(p, PSL.REMOVED_FROM_REGION_SPECIFIC.msg()
                                 .replace("%player%", addPlayerName)
-                                .replace("%region%", r.getName() == null ? r.getId() : r.getName() + " (" + r.getId() + ")"));
+                                .replace("%region%", regionName));
                     } else {
                         PSL.msg(p, PSL.REMOVED_FROM_REGION.msg().replace("%player%", addPlayerName));
                     }
