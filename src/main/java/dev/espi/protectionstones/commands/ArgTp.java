@@ -145,7 +145,7 @@ public class ArgTp implements PSCommandArg {
         if (r.getTypeOptions().tpWaitingSeconds == 0 || p.hasPermission("protectionstones.tp.bypasswait")) {
             // no teleport delay
             PSL.msg(p, PSL.TPING.msg());
-            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> p.teleport(r.getHome())); // run on main thread, not async
+            p.getScheduler().run(ProtectionStones.getInstance(), (task) -> p.teleportAsync(r.getHome()), null); // run on main thread, not async
         } else if (!r.getTypeOptions().noMovingWhenTeleportWaiting) {
             // teleport delay, but doesn't care about moving
             p.sendMessage(PSL.TP_IN_SECONDS.msg().replace("%seconds%", "" + r.getTypeOptions().tpWaitingSeconds));
@@ -190,7 +190,7 @@ public class ArgTp implements PSCommandArg {
                         } else if (waitCounter.get(uuid) == r.getTypeOptions().tpWaitingSeconds * 4) { // * 4 since this loops 4 times a second
                             // if the timer has passed, teleport and cancel
                             PSL.msg(pl, PSL.TPING.msg());
-                            pl.teleport(r.getHome());
+                            pl.getScheduler().run(ProtectionStones.getInstance(), t -> pl.teleportAsync(r.getHome()), null);
                             removeUUIDTimer(uuid);
                         }
                     }, 5, 5) // loop 4 times a second
