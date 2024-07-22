@@ -279,7 +279,7 @@ public class BlockHandler {
         if (blockOptions.autoHide) {
             PSL.msg(p, PSL.REGION_HIDDEN.msg());
             // run on next tick so placing tile entities don't complain
-            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> l.getBlock().setType(Material.AIR));
+            Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), l, (task) -> l.getBlock().setType(Material.AIR));
         }
 
         if (blockOptions.startWithTaxAutopay) {

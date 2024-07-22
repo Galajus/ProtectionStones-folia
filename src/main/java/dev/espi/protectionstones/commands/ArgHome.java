@@ -137,7 +137,7 @@ public class ArgHome implements PSCommandArg {
         if (args.length != 2 && args.length != 1)
             return PSL.msg(p, PSL.HOME_HELP.msg());
 
-        Bukkit.getAsyncScheduler().runNow(ProtectionStones.getInstance(), (task) -> {
+        p.getScheduler().run(ProtectionStones.getInstance(), (task) -> {
             PSPlayer psp = PSPlayer.fromPlayer(p);
             if (args.length == 1) {
                 // just "/ps home"
@@ -169,7 +169,7 @@ public class ArgHome implements PSCommandArg {
 
                 ArgTp.teleportPlayer(p, regions.get(0));
             }
-        });
+        }, null);
 
         return true;
     }

@@ -26,6 +26,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import dev.espi.protectionstones.event.PSBreakProtectBlockEvent;
 import dev.espi.protectionstones.event.PSCreateEvent;
 import dev.espi.protectionstones.event.PSRemoveEvent;
 import dev.espi.protectionstones.utils.RecipeUtil;
@@ -33,6 +34,7 @@ import dev.espi.protectionstones.utils.UUIDCache;
 import dev.espi.protectionstones.utils.WGUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -564,13 +566,15 @@ public class ListenerClass implements Listener {
     @EventHandler
     public void onPSCreate(PSCreateEvent event) {
         if (event.isCancelled()) return;
-        if (!event.getRegion().getTypeOptions().eventsEnabled) return;
+        PSRegion region = event.getRegion();
+        if (!region.getTypeOptions().eventsEnabled) return;
 
         // run on next tick (after the region is created to allow for edits to the region)
-        Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> {
+        Location home = region.getHome();
+        Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), home, (task) -> {
             // run custom commands (in config)
-            for (String action : event.getRegion().getTypeOptions().regionCreateCommands) {
-                execEvent(action, event.getPlayer(), event.getPlayer().getName(), event.getRegion());
+            for (String action : region.getTypeOptions().regionCreateCommands) {
+                execEvent(action, event.getPlayer(), event.getPlayer().getName(), region);
             }
         });
     }

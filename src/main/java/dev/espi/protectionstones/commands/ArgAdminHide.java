@@ -22,6 +22,7 @@ import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.WGUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,10 +54,15 @@ class ArgAdminHide {
             for (ProtectedRegion r : mgr.getRegions().values()) {
                 if (ProtectionStones.isPSRegion(r)) {
                     PSRegion region = PSRegion.fromWGRegion(w, r);
+                    Location location = region.getProtectBlock().getLocation();
                     if (args[1].equalsIgnoreCase("hide")) {
-                        Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task1) -> region.hide());
+                        Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), location, task1 -> {
+                            region.hide();
+                        });
                     } else if (args[1].equalsIgnoreCase("unhide")){
-                        Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task1) -> region.unhide());
+                        Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), location, task1 -> {
+                            region.unhide();
+                        });
                     }
                 }
             }

@@ -23,6 +23,7 @@ import dev.espi.protectionstones.utils.WGUtils;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.time.Duration;
@@ -129,7 +130,9 @@ public class PSEconomy {
     public static void processTaxes(PSRegion r) {
         // if taxes are enabled for this regions
         if (r.getTypeOptions() != null && r.getTypeOptions().taxPeriod != -1) {
-            Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> {
+
+            Location home = r.getHome();
+            Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), home, task -> {
                 // update tax payments due
                 r.updateTaxPayments();
 

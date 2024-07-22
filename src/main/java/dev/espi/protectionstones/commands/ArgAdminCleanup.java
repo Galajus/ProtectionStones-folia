@@ -23,6 +23,7 @@ import dev.espi.protectionstones.ProtectionStones;
 import dev.espi.protectionstones.utils.WGUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -40,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 class ArgAdminCleanup {
 
@@ -155,8 +157,8 @@ class ArgAdminCleanup {
 
     static private void regionLoop(Iterator<PSRegion> deleteRegionsIterator, CommandSender p, boolean isRemoveOperation) {
         if (deleteRegionsIterator.hasNext()) {
-            Bukkit.getGlobalRegionScheduler().runDelayed(ProtectionStones.getInstance(), (task) ->
-                    processRegion(deleteRegionsIterator, p, isRemoveOperation), 1);
+            Bukkit.getAsyncScheduler().runDelayed(ProtectionStones.getInstance(), (task) ->
+                    processRegion(deleteRegionsIterator, p, isRemoveOperation), 50, TimeUnit.MILLISECONDS);
         } else { // finished region iteration
             PSL.msg(p, PSL.ADMIN_CLEANUP_FOOTER.msg()
                     .replace("%arg%", isRemoveOperation ? "remove" : "preview"));
@@ -185,7 +187,11 @@ class ArgAdminCleanup {
             p.sendMessage(ChatColor.YELLOW + "Removed region " + r.getId() + " due to inactive owners.");
 
             // must be sync
-            r.deleteRegion(true);
+            Location home = r.getHome();
+            Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), home, task -> {
+                r.deleteRegion(true);
+            });
+
         } else { // preview
 
             p.sendMessage(ChatColor.YELLOW + "Found region " + r.getId() + " that can be deleted.");

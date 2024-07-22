@@ -26,6 +26,7 @@ import dev.espi.protectionstones.PSMergedRegion;
 import dev.espi.protectionstones.PSRegion;
 import dev.espi.protectionstones.ProtectionStones;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.util.ArrayList;
@@ -272,7 +273,8 @@ public class WGMerge {
         for (PSRegion r : merge) {
             if (!r.getId().equals(newID)) {
                 // run delete event for non-root real regions
-                Bukkit.getGlobalRegionScheduler().run(ProtectionStones.getInstance(), (task) -> r.deleteRegion(false));
+                Location home = r.getHome();
+                Bukkit.getRegionScheduler().run(ProtectionStones.getInstance(), home, (task) -> r.deleteRegion(false));
             } else {
                 rm.removeRegion(r.getId());
             }

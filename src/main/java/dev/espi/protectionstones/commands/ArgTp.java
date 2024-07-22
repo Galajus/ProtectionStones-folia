@@ -165,14 +165,12 @@ public class ArgTp implements PSCommandArg {
 
             // add teleport wait tasks to queue
             waitCounter.put(uuid, 0);
-            taskCounter.put(uuid, Bukkit.getGlobalRegionScheduler().runAtFixedRate(ProtectionStones.getInstance(), (task) -> {
-                        Player pl = Bukkit.getPlayer(uuid);
-                        // cancel if the player is not on the server
-                        if (pl == null) {
-                            removeUUIDTimer(uuid);
-                            return;
-                        }
-
+            Player pl = Bukkit.getPlayer(uuid);
+            if (pl == null) {
+                removeUUIDTimer(uuid);
+                return;
+            }
+            taskCounter.put(uuid, pl.getScheduler().runAtFixedRate(ProtectionStones.getInstance(), (task) -> {
                         if (waitCounter.get(uuid) == null) {
                             removeUUIDTimer(uuid);
                             return;
@@ -193,7 +191,7 @@ public class ArgTp implements PSCommandArg {
                             pl.getScheduler().run(ProtectionStones.getInstance(), t -> pl.teleportAsync(r.getHome()), null);
                             removeUUIDTimer(uuid);
                         }
-                    }, 5, 5) // loop 4 times a second
+                    }, null,5, 5) // loop 4 times a second
             );
         }
     }
